@@ -34,8 +34,8 @@ client.on('message', async message => {
   if(message.content.indexOf(config.prefix) !== 0) return;
 
   
-  var array = ["help", "ping", "say", "invite"];
-  var array2 = [" ", " ", " anonimowe_wyznania", " "];
+  var array = ["help", "ping", "say", "invite", "remindme"];
+  var array2 = [" ", " ", " anonimowe wyznanie", " ", " czas[s/m/h/d] wiadomość do przypomnienia"];
 
   // Here we separate our "command" name, and our "arguments" for the command.
   // e.g. if we have the message "+say Is this the real life?" , we'll get the following:
@@ -70,20 +70,82 @@ client.on('message', async message => {
 
     case array[3]:
     
-      message.channel.send("https://goo.gl/tfjfWB");
-      
+      message.channel.send("Aby poprawnie działały wszystkie funkcje należy nadać uprawnienia zarządzania wiadomości lub wyższe: \nhttps://goo.gl/tfjfWB");
       break;
 
+    case array[4]:
 
+    var msg1 = message;
+    
 
+    var message2 = message;
+    try {
+      
+      // Variables
+      var returntime;
+      var timemeasure;
+      msg = message.content.split(' ');
+      console.log('Message recieved from ' + message2.author.id + ' at ' + Date.now().toString());
+
+      // Sets the return time
+      timemeasure = msg[1].substring((msg[1].length - 1), (msg[1].length))
+      returntime = msg[1].substring(0, (msg[1].length - 1))
+
+      // Based off the delimiter, sets the time
+      if (timemeasure == 's' || timemeasure == 'm' || timemeasure == 'h' || timemeasure == 'd' ) {
+        msg1.channel.send("Dobrze! Przypomnę za " + returntime+timemeasure + "!");
+
+        switch (timemeasure) {
+
+        case 's':
+          returntime = returntime * 1000;
+          break;
+
+        case 'm':
+          returntime = returntime * 1000 * 60;
+          break;
+
+        case 'h':
+          returntime = returntime * 1000 * 60 * 60;
+          break;
+
+        case 'd':
+          returntime = returntime * 1000 * 60 * 60 * 24;
+          break;
+
+        default:
+          returntime = returntime * 1000;
+          break;
+      } 
+
+      } else {
+        message2.reply("Podaj jednostkę czasu! s/m/h/d np 5m");
+        break;
+
+      }
+      // Returns the Message
+      client.setTimeout(function () {
+        // Removes the first 2 array items
+        msg.shift();
+        msg.shift();
+
+        // Creates the message
+        var content = msg.join();
+        for (var i = 0; i < msg.length; i++) {
+          content = content.replace(',', ' ');
+          msg[i]
+        }
+
+        message2.reply(content);
+        console.log('Message sent to ' + message2.author.id + ' at ' + Date.now().toString());
+      }, returntime)
+    } catch (e) {
+      message2.reply("error chuje");
+      console.error(e.toString());
+    }
+    break;
 
     default:
-
   }
-
 });
-
-
-
-
 client.login(config.token);
