@@ -34,31 +34,30 @@ client.on('message', async message => {
   if(message.content.indexOf(config.prefix) !== 0) return;
 
   
-  let array = ["help", "ping", "say", "invite", "remindme"];
-  let array2 = [" ", " ", " anonimowe wyznanie", " ", " czas[s/m/h/d] wiadomość do przypomnienia"];
+  let array = ["help", "ping", "say", "invite", "remind", "random"];
+  let array2 = [" ", " ", " anonimowe wyznanie", " ", " czas[s/m/h/d] wiadomość do przypomnienia", " x - losowa liczba od 1 do x"];
+  let array3 = ["h", "p", "s", "inv", "r", "rnd"];
+  let array4 = ["hlp", "p", "s", "in", "remindme", "rand"];
+  
 
   // Here we separate our "command" name, and our "arguments" for the command.
   // e.g. if we have the message "+say Is this the real life?" , we'll get the following:
   // command = say
   // args = ["Is", "this", "the", "real", "life?"]
+  //help
   const args = message.content.slice(config.prefix.length).trim().split(/ +/g);
   const command = args.shift().toLowerCase();
 
-  switch (command) {
-    case array[0]:
-    for (let i = 0; i < array.length; i++) {
-      message.channel.send("```"+config.prefix+array[i]+array2[i]+"```");
-      
-    }
-    
-    break;
-    case array[1]:
-    const m = await message.channel.send(`ping?`);
-    m.edit(`pong! ${m.createdTimestamp - message.createdTimestamp}ms`);
-    
-    break;
+  if (command == array3[0] || command == array[0]) {
+    for (let i = 0; i < array.length; i++) message.channel.send("```"+config.prefix+array[i]+array2[i]+"```");
+  }
+  else if (command == array3[1] || command == array[1]) {
+     //ping
 
-    case array[2]:
+      let msg = await message.channel.send(`ping?`);
+      msg.edit(`pong! ${msg.createdTimestamp - message.createdTimestamp}ms`);
+  }
+  else if (command == array3[2] || command == array[2]) {
       // makes the bot say something and delete the message. As an example, it's open to anyone to use. 
       // To get the "message" itself we join the `args` back into a string with spaces: 
       const sayMessage = args.join(` `);
@@ -66,61 +65,58 @@ client.on('message', async message => {
       message.delete().catch(O_o=>{}); 
       // And we get the bot to say the thing: 
       message.channel.send(sayMessage);
-      break;
-
-      case array[3]:
-      
-      message.channel.send(`Aby poprawnie działały wszystkie funkcje należy nadać uprawnienia zarządzania wiadomości lub wyższe: \nhttps://goo.gl/tfjfWB"`);
-      break;
-
-      case array[4]:
+  }
+  else if (command == array3[3] || command == array[3]) {
+    message.channel.send(`Aby poprawnie działały wszystkie funkcje należy nadać uprawnienia zarządzania wiadomościami lub wyższe: \nhttps://goo.gl/tfjfWB"`);
+    
+  }
+  else if (command == array3[4] || command == array[4]) {
+     //remind
 
       let msg1 = message;
-      
+      let msg2 = message;
 
-      let message2 = message;
-      try {
-        
       // Variables
       let returntime;
       let timemeasure;
-      msg = message.content.split(' ');
-      console.log(`Message recieved from ${message2.author.username}`);
+      let msg = message.content.split(' ');
+      console.log(`Message recieved from ${msg2.author.username}`);
 
       // Sets the return time
-      timemeasure = msg[1].substring((msg[1].length - 1), (msg[1].length))
-      returntime = msg[1].substring(0, (msg[1].length - 1))
+      timemeasure = msg[1].substring((msg[1].length - 1), (msg[1].length));
+      returntime = msg[1].substring(0, (msg[1].length - 1));
 
       // Based off the delimiter, sets the time
-      if (timemeasure == 's' || timemeasure == 'm' || timemeasure == 'h' || timemeasure == 'd' ) {
+      const time = ['s', 'm', 'h', 'd'];
+      //if (timemeasure == 's' || timemeasure == 'm' || timemeasure == 'h' || timemeasure == 'd' ) 
+      if(time.includes(timemeasure)) {
         msg1.channel.send(`Dobrze! Przypomnę za ${returntime}${timemeasure}!`);
 
         switch (timemeasure) {
 
           case 's':
-          returntime = returntime * 1000;
+            returntime = returntime * 1000;
           break;
 
           case 'm':
-          returntime = returntime * 1000 * 60;
+            returntime = returntime * 1000 * 60;
           break;
 
           case 'h':
-          returntime = returntime * 1000 * 60 * 60;
+            returntime = returntime * 1000 * 60 * 60;
           break;
 
           case 'd':
-          returntime = returntime * 1000 * 60 * 60 * 24;
+            returntime = returntime * 1000 * 60 * 60 * 24;
           break;
 
           default:
-          returntime = returntime * 1000;
+            returntime = returntime * 1000;
           break;
         } 
 
       } else {
-        message2.reply(`Podaj jednostkę czasu! s/m/h/d np 5m`);
-        break;
+        msg2.reply(`Podaj jednostkę czasu! s/m/h/d np 5m`);
 
       }
       // Returns the Message
@@ -136,16 +132,36 @@ client.on('message', async message => {
           msg[i];
         }
 
-        message2.reply(content);
-        console.log(`Message sent to ${message2.author.id}`);
+        msg2.reply(content);
+        console.log(`Message sent to ${msg2.author.id}`);
       }, returntime)
-    } catch (e) {
-      message2.reply(`error chuje`);
-      console.error(e.toString());
     }
-    break;
+    else if (command == array3[5] || command == array[5] || command == array4[5]) {
+      let msg1 = message;
+      
 
-    default:
-  }
+      // Variables
+      let returntime;
+      let x;
+      let msg = message.content.split(' ');
+      //console.log(`Message recieved from ${msg2.author.username}`);
+
+      // Sets the return time
+      //x = msg[1].substring((msg[1].length - 1), (msg[1].length));
+      y = msg[1].substring(0, (msg[1].length));
+
+      function rand(max) {
+        return 1+Math.floor(Math.random() * Math.floor(max));
+      }
+
+      //x = rand(y);
+        
+        //let msg2 = await message.channel.send(rand(y));
+        msg1.channel.send(rand(y));
+        //for (var i = 0; i <= 50; i++) msg2.channel.send(i);
+  
+    } 
+      
+  
 });
 client.login(config.token);
