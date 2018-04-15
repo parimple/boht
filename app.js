@@ -28,13 +28,7 @@ client.on('message', async message => {
   if(message.author.bot) return;
   if(message.content.indexOf(config.prefix) !== 0) return;
 
-  let array = ["help", "ping", "say", "invite", "remind", "random"];
-  let array2 = [" ", " ", " anonimowe wyznanie", " ",
-    " czas[s/m/h/d] wiadomość do przypomnienia", " x - losowa liczba od 1 do x"];
-  let array3 = ["h", "p", "s", "inv", "r", "rnd"];
-  let array4 = ["hlp", "p", "s", "in", "remindme", "rand"];
   let name = [];
-
   name[0] = ["h", "help", "hlp"];
   name[1] = ["p", "ping"];
   name[2] = ["s", "say"];
@@ -45,7 +39,7 @@ client.on('message', async message => {
   description = [
   "- komendy",
   "- czas odpowiedzi serwera",
-  "- anonimowe wyznanie",
+  "abc def - anonimowe wyznanie",
   "- zaproś bohta na własny serwer",
   "t[s/m/h/d] abc def - wiadomość do przypomnienia",
   "x - losowa liczba od 1 do x"
