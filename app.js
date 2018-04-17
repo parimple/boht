@@ -68,8 +68,7 @@ client.on('message', async message => {
       message.channel.send(sayMessage);
     },
     function() {
-      message.channel.send(`Aby poprawnie działały wszystkie funkcje należy nadać bohtowi uprawnienia`
-      +` zarządzania wiadomościami lub wyższe: \nhttps://goo.gl/tfjfWB"`);
+      message.channel.send(`https://goo.gl/s68s91`);
     },
     function() {
       let msg1 = message;
