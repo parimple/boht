@@ -36,18 +36,18 @@ client.on('message', async message => {
   const command = args.shift().toLowerCase();
 
 
-  sql.get(`SELECT * FROM scores WHERE userId ="${message.author.id}" AND guildId="${message.guild.id}"`).then(row => {
+  sql.get(`SELECT * FROM scores WHERE userId ="${message.author.id}" AND guildId="${message.guild.id}"`).then(async row => {
     if (!row) {
-      sql.run("INSERT INTO scores (guildId, userId, points, level) VALUES (?, ?, ?, ?)", [message.guild.id,message.author.id, 1, 0]);
+      sql.run("INSERT INTO scores (guildId, userId, points, level) VALUES (?, ?, ?, ?)", [message.guild.id, message.author.id, 1, 0]);
     } 
     else {
-      let curLevel = Math.floor(0.1 * Math.sqrt(row.points + 1));
+      let curLevel = await Math.floor(0.1 * Math.sqrt(row.points + 1));
       if (curLevel > row.level) {
         row.level = curLevel;
-        sql.run(`UPDATE scores SET points = ${row.points + 1}, level = ${row.level} WHERE userId = ${message.author.id}`);
-        message.reply(`Gratulacje, zdobyłeś kolejny poziom: **${curLevel}**!`);
+        sql.run(`UPDATE scores SET points = ${row.points + 1}, level = ${row.level} WHERE userId = ${message.author.id} AND guildId = ${message.guild.id}`);
+        message.reply(`Gratulacje, **${curLevel}** poziom!`);
     }
-      sql.run(`UPDATE scores SET points = ${row.points + 1} WHERE userId = ${message.author.id}`);
+      sql.run(`UPDATE scores SET points = ${row.points + 1} WHERE userId = ${message.author.id} AND guildId = ${message.guild.id}`);
     }
   }).catch(() => {
     console.error;
@@ -114,7 +114,8 @@ client.on('message', async message => {
     },
     ///inv
     () => {
-      message.channel.send(`https://goo.gl/s68s91`);
+      const x = `https://goo.gl/s68s91`;
+      message.channel.send(x);
     },
     ///remind
     () => {
@@ -207,7 +208,7 @@ client.on('message', async message => {
           //o += i+1 + " " +msg.guild.members.get(row.userId).displayName + "\n        " + row.level + " " +row.points + "\n";
           //o += `${i+1}.                         lv: ${row.level} || exp: ${row.points} \n   ${msg.guild.members.get(row.userId).displayName}`;
          // client.setTimeout(() => {
-            o += `${i+1}.   ${msg.guild.members.get(row.userId).displayName}\n________lv: ${row.level} || exp: ${row.points} \n`;
+            o += `${i+1}.   ${msg.guild.members.get(row.userId).displayName}\n________ lv: ${row.level} || exp: ${row.points} \n`;
           //}, 1);
           
 
