@@ -195,22 +195,25 @@ client.on('message', async message => {
       });
     },
     //top
-    () => {
+    async () => {
       msg = message;
       let o = "```glsl\n_________________________\n";
       let c = 0;
       for (let i = 0; i < 10; i++) {
 
-        sql.get(`SELECT * FROM scores WHERE guildId="${msg.guild.id}" ORDER BY points DESC LIMIT 1 OFFSET ${i}`).then(row => {
+        await sql.get(`SELECT userId, level, points FROM scores WHERE guildId="${msg.guild.id}" ORDER BY points DESC LIMIT 1 OFFSET ${i}`).then(row => {
           if (!row) return message.reply(`---\n`);
 
           //o += i+1 + " " +msg.guild.members.get(row.userId).displayName + "\n        " + row.level + " " +row.points + "\n";
           //o += `${i+1}.                         lv: ${row.level} || exp: ${row.points} \n   ${msg.guild.members.get(row.userId).displayName}`;
-          o += `${i+1}.   ${msg.guild.members.get(row.userId).displayName}\n________lv: ${row.level} || exp: ${row.points} \n`;
+         // client.setTimeout(() => {
+            o += `${i+1}.   ${msg.guild.members.get(row.userId).displayName}\n________lv: ${row.level} || exp: ${row.points} \n`;
+          //}, 1);
+          
 
           if (i==9) {
             o += "```";
-            //console.log(o);
+            console.log(o);
             msg.channel.send(o);
           }
           //console.log(c);
