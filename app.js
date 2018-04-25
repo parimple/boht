@@ -31,8 +31,10 @@ client.on('message', async message => {
   
   const args = message.content.slice(config.prefix.length).trim().split(/ +/g);
   const command = args.shift().toLowerCase();
+  console.log(args);
 
-  sql.get(`SELECT * FROM scores WHERE userId ="${message.author.id}" AND guildId="${message.guild.id}"`).then(async row => {
+  if (args.length > 2) {
+    sql.get(`SELECT * FROM scores WHERE userId ="${message.author.id}" AND guildId="${message.guild.id}"`).then(async row => {
     if (!row) {
       sql.run("INSERT INTO scores (guildId, userId, points, level) VALUES (?, ?, ?, ?)", [message.guild.id, message.author.id, 1, 0]);
     } 
@@ -52,6 +54,9 @@ client.on('message', async message => {
     });
   });
 
+  }
+  
+
   if (message.content.indexOf(config.prefix) !== 0) return;
 
   const name = [
@@ -63,7 +68,8 @@ client.on('message', async message => {
   ["rand", "rnd", "random"],
   ["points", "p"],
   ["level", "lv", "l"],
-  ["top", "t"]
+  ["top", "t"],
+  ["x"]
   ];
 
   const description = [
@@ -75,7 +81,8 @@ client.on('message', async message => {
   "x - losowa liczba od 1 do x",
   "- ilość Twoich punktów",
   "- Twój poziom IQ",
-  "- lista osób z największą ilością punktów",
+  "1, 2...- lista osób z największą ilością punktów",
+  "- tajne"
   ];  
 
   class Cmd {
@@ -229,6 +236,12 @@ client.on('message', async message => {
           });
       }
     },
+    //rand
+    () => {
+      let msg1 = message;
+     
+      msg1.channel.send("D");
+    }
   ];
 
   let cmd = [];
@@ -245,6 +258,7 @@ client.on('message', async message => {
   else if (name[6].includes(command)) {cmd[6].fun();}
   else if (name[7].includes(command)) {cmd[7].fun();}
   else if (name[8].includes(command)) {cmd[8].fun();}
+  else if (name[9].includes(command)) {cmd[9].fun();}
 
 
 });
