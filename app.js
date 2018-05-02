@@ -4,6 +4,10 @@ const config = require('./config.json');
 const sql = require(`sqlite`);
 sql.open(`./score.sqlite`);
 
+client.on("error", function(err) {
+   console.log(err);
+});
+
 client.on('ready', () => {
   console.log(`Bot has started, with ${client.users.size} users, in 
     ${client.channels.size} channels of ${client.guilds.size} servers.`);
@@ -31,7 +35,7 @@ client.on('message', async message => {
   
   const args = message.content.slice(config.prefix.length).trim().split(/ +/g);
   const command = args.shift().toLowerCase();
-  console.log(args);
+  //console.log(args);
 
   if (args.length > 2) {
     sql.get(`SELECT * FROM scores WHERE userId ="${message.author.id}" AND guildId="${message.guild.id}"`).then(async row => {
@@ -52,10 +56,9 @@ client.on('message', async message => {
     sql.run("CREATE TABLE IF NOT EXISTS scores (guildId TEXT, userId TEXT, points INTEGER, level INTEGER)").then(() => {
       sql.run("INSERT INTO scores (guildId, userId, points, level) VALUES (?, ?, ?, ?)", [message.guild.id, message.author.id, 1, 0]);
     });
+    //sql.run("")
   });
-
   }
-  
 
   if (message.content.indexOf(config.prefix) !== 0) return;
 
@@ -124,7 +127,7 @@ client.on('message', async message => {
       let returntime;
       let timemeasure;
       let msg = message.content.split(' ');
-      console.log(`Message recieved from ${msg2.author.username}`);
+      //console.log(`Message recieved from ${msg2.author.username}`);
 
       timemeasure = msg[1].substring((msg[1].length - 1), (msg[1].length));
       returntime = msg[1].substring(0, (msg[1].length - 1));
@@ -163,7 +166,7 @@ client.on('message', async message => {
           msg[i];
         }
         msg2.reply(content);
-        console.log(`Message sent to ${msg2.author.id}`);
+        //console.log(`Message sent to ${msg2.author.id}`);
       }, returntime);
     },
     //rand
@@ -183,7 +186,7 @@ client.on('message', async message => {
       sql.get(`SELECT * FROM scores WHERE userId ="${message.author.id}" AND guildId="${msg.guild.id}"`).then(row => {
         if (!row) return message.reply(`Posiadasz 0 punktów`);
         msg.reply(`Ilość Twoich punktów: ${row.points}`);
-        console.log(msg.guild.id);
+        //console.log(msg.guild.id);
       });
     },
     //level
@@ -192,7 +195,7 @@ client.on('message', async message => {
       sql.get(`SELECT * FROM scores WHERE userId ="${message.author.id}" AND guildId="${msg.guild.id}"`).then(row => {
         if (!row) return message.reply(`Posiadasz 0 punktów`);
         msg.reply(`Twój poziom: ${row.level}`);
-        console.log(msg.guild.id);
+        //console.log(msg.guild.id);
       });
     },
     //top
@@ -209,38 +212,32 @@ client.on('message', async message => {
       } catch(error) {
         y = 10;
       }
-      for (let i = y-10; i < y; i++) {
-          await sql.get(`SELECT userId, level, points FROM scores WHERE guildId="${msg.guild.id}" ORDER BY points DESC LIMIT 1 OFFSET ${i}`).then(row => {
-            if (!row) return;
-            console.log(`${row.userId}`);
-            console.log(`${row.points}`);
-            let n;
-            try {
-              n = msg.guild.members.get(row.userId).displayName;
-            } catch(error) {
-              n = "undefined";
-            };
+      //sql.get(`SELECT `)
+        for (let i = y-10; i < y; i++) {
+            await sql.get(`SELECT userId, level, points FROM scores WHERE guildId="${msg.guild.id}" ORDER BY points DESC LIMIT 1 OFFSET ${i}`).then(row => {
+              if (!row) return;
+              let n;
+              try {
+                n = msg.guild.members.get(row.userId).displayName;
+              } catch(error) {
+                n = "undefined";
+              };
+              
+              if (n != "undefined") {
+                o += `${i+1}.   ${msg.guild.members.get(row.userId).displayName}\n________ lv: ${row.level} || exp: ${row.points} \n`;
+              } else {o += `${i+1}.   ${row.userId}\n________ lv: ${row.level} || exp: ${row.points} \n`};
 
-            console.log(`${n}`);
-            console.log(`____`);
-            
-            if (n != "undefined") {
-              o += `${i+1}.   ${msg.guild.members.get(row.userId).displayName}\n________ lv: ${row.level} || exp: ${row.points} \n`;
-            } else {o += `${i+1}.   ${row.userId}\n________ lv: ${row.level} || exp: ${row.points} \n`};
-
-            if (i==y-1) {
-              o += "```";
-              console.log(o);
-              msg.channel.send(o);
-            }        
-          });
-      }
+              if (i==y-1) {
+                o += "```";
+                msg.channel.send(o);
+              }        
+            });
+        }
     },
-    //rand
+    //xxx
     () => {
-      let msg1 = message;
-     
-      msg1.channel.send("D");
+      message.channel.send("D");
+      
     }
   ];
 
@@ -249,7 +246,7 @@ client.on('message', async message => {
     cmd.push(new Cmd(name[i], fun[i], description[i]));
   }
 
-  if (name[0].includes(command)) {cmd[0].fun();} 
+       if (name[0].includes(command)) {cmd[0].fun();} 
   else if (name[1].includes(command)) {cmd[1].fun();}
   else if (name[2].includes(command)) {cmd[2].fun();}
   else if (name[3].includes(command)) {cmd[3].fun();}
