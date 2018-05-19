@@ -1,14 +1,80 @@
 const Discord = require('discord.js');
 const client = new Discord.Client({autoReconnect:true});
 const config = require('./config.json');
+
 const sql = require(`sqlite`);
-sql.open(`./score.sqlite`);
+sql.open(`./boht.sqlite`);
 
 client.on("error", function(err) {
    console.log(err);
 });
 
 client.on('ready', () => {
+  sql.run(`CREATE TABLE IF NOT EXISTS user (
+    userId TEXT PRIMARY KEY, 
+    reputation INTEGER, 
+    repDate INTEGER, 
+    creditsDate INTEGER, 
+    userInfo TEXT, 
+    credits INTEGER) without rowid`
+    );
+
+  sql.run(`CREATE TABLE IF NOT EXISTS guild (
+    guildId TEXT PRIMARY KEY, 
+    prefix TEXT, 
+    language TEXT) without rowid`
+    );
+
+  sql.run(`CREATE TABLE IF NOT EXISTS role (
+    roleId TEXT, 
+    expireDate INTEGER, 
+    role TEXT, 
+    guildId TEXT, 
+    PRIMARY KEY (roleId, guildId), 
+    FOREIGN KEY(guildId) REFERENCES guild(guildId)) without rowid`
+    );
+
+  sql.run(`CREATE TABLE IF NOT EXISTS guild_user (
+    score INTEGER, 
+    tempScore INTEGER,  
+    userGuildInfo TEXT,  
+    userId TEXT,  
+    guildId TEXT,  
+    PRIMARY KEY (userId, guildId),  
+    FOREIGN KEY(guildId)  REFERENCES guild(guildId), 
+    FOREIGN KEY(userId)  REFERENCES user(userId)) without rowid`
+    );
+
+  sql.run(`CREATE TABLE IF NOT EXISTS channel (
+    channelId TEXT, 
+    channel TEXT, 
+    active INTEGER, 
+    guildId TEXT, 
+    PRIMARY KEY (channelId, guildId), 
+    FOREIGN KEY(guildId) REFERENCES guild(guildId)) without rowid`
+    );
+
+  sql.run(`CREATE TABLE IF NOT EXISTS role_user (
+    expireDate INTEGER, 
+    userId TEXT, 
+    roleId TEXT,  
+    active TEXT, 
+    guildId TEXT,  
+    PRIMARY KEY (userId, roleId, guildId),  
+    FOREIGN KEY(roleId, guildId)  REFERENCES role(roleId, guildId), 
+    FOREIGN KEY(userId)  REFERENCES user(userId)) without rowid`
+    );
+
+  sql.run(`CREATE TABLE IF NOT EXISTS message (
+    messageId TEXT, 
+    message TEXT, 
+    active INTEGER, 
+    guildId TEXT, 
+    PRIMARY KEY (messageId, guildId), 
+    FOREIGN KEY(guildId) REFERENCES guild(guildId)) without rowid`
+    );
+  
+
   console.log(`Bot has started, with ${client.users.size} users, in 
     ${client.channels.size} channels of ${client.guilds.size} servers.`);
   client.user.setActivity(`${config.prefix}help || ${config.prefix}invite`);
@@ -16,11 +82,54 @@ client.on('ready', () => {
 });
 
 client.on("guildCreate", guild => {
+  
+    sql.get(`SELECT * FROM guild WHERE guildId ="${guild.id}"`).then(row => {
+    if (!row) {
+      sql.run(`INSERT INTO guild (guildId, prefix, language) VALUES (?, ?, ?)`,
+       [guild.id, ".", "PL"]);
+    } 
+  }).catch(() => {
+    console.error;
+  });
+  
   console.log(`New guild joined: ${guild.name} (id: ${guild.id}). This guild has ${guild.memberCount} members!`);
 });
 
 client.on("guildDelete", guild => {
   console.log(`I have been removed from: ${guild.name} (id: ${guild.id})`);
+});
+
+client.on("guildMemberAdd", (member) => {
+  console.log(`New User ${member.user.username} has joined ${member.guild.name}` );
+  //member.guild.get('channelID').send(`Witaj na serwerze **${member.user.username}**'`);
+
+    sql.get(`SELECT userId FROM user WHERE userId ="${member.user.id}"`).then(row => {
+    if (!row) {
+      sql.run(`INSERT INTO user (userId, reputation, repDate, creditsDate, userInfo, credits) VALUES (?, ?, ?, ?, ?, ?)`,
+       [member.user.id, 0, 0, 0, "", 0]);
+      sql.run(`INSERT INTO guild_user (score, tempScore, userGuildInfo, userId, guildId) VALUES (?, ?, ?, ?, ?)`,
+       [0, 0, "", member.user.id, member.guild.id]);
+      console.log("dziala bez niczego");
+    }
+    sql.get(`SELECT * FROM guild_user WHERE guildId ="${member.guild.id}" AND userId ="${member.user.id}"`).then(row => {
+    if (!row) {
+      sql.run(`INSERT INTO guild_user (score, tempScore, userGuildInfo, userId, guildId) VALUES (?, ?, ?, ?, ?)`,
+       [0, 0, "", member.user.id, member.guild.id]);
+      console.log("dziala tylko dla guser");
+    } 
+  }).catch(() => {
+    console.error;
+  });
+
+  }).catch(() => {
+    console.error;
+  });
+
+console.log("siema");
+
+
+
+  //insert into user select distinct userId, 0, 0, 0, "", 0
 });
 
 client.on('message', async message => {
@@ -37,28 +146,27 @@ client.on('message', async message => {
   const command = args.shift().toLowerCase();
   //console.log(args);
 
+  //new db
   if (args.length > 2) {
-    sql.get(`SELECT * FROM scores WHERE userId ="${message.author.id}" AND guildId="${message.guild.id}"`).then(async row => {
+    sql.get(`SELECT * FROM guild_user WHERE userId ="${message.author.id}" AND guildId="${message.guild.id}"`).then(async row => {
     if (!row) {
-      sql.run("INSERT INTO scores (guildId, userId, points, level) VALUES (?, ?, ?, ?)", [message.guild.id, message.author.id, 1, 0]);
+      sql.run(`INSERT INTO guild_user (guildId, userId, score, tempScore, userGuildInfo) VALUES (?, ?, ?, ?, ?)`, 
+        [message.guild.id, message.author.id, 1, 1, ""]);
+      //await Math.floor(0.1 * Math.sqrt(row.points + 1));
     } 
     else {
-      let curLevel = await Math.floor(0.1 * Math.sqrt(row.points + 1));
-      if (curLevel > row.level) {
-        row.level = curLevel;
-        sql.run(`UPDATE scores SET points = ${row.points + 1}, level = ${row.level} WHERE userId = ${message.author.id} AND guildId = ${message.guild.id}`);
-        message.reply(`Gratulacje, **${curLevel}** poziom!`);
-    }
-      sql.run(`UPDATE scores SET points = ${row.points + 1} WHERE userId = ${message.author.id} AND guildId = ${message.guild.id}`);
+      sql.run(`UPDATE guild_user SET score = ${row.score + 1}, tempScore = ${row.tempScore + 1} WHERE userId = ${message.author.id} AND guildId = ${message.guild.id}`);
     }
   }).catch(() => {
     console.error;
-    sql.run("CREATE TABLE IF NOT EXISTS scores (guildId TEXT, userId TEXT, points INTEGER, level INTEGER)").then(() => {
-      sql.run("INSERT INTO scores (guildId, userId, points, level) VALUES (?, ?, ?, ?)", [message.guild.id, message.author.id, 1, 0]);
-    });
+    
+    sql.run("CREATE TABLE IF NOT EXISTS guild_user (guildId TEXT, userId TEXT, points INTEGER, level INTEGER)").then(() => {
+      sql.run("INSERT INTO guild_user (guildId, userId, points, level) VALUES (?, ?, ?, ?)", [message.guild.id, message.author.id, 1, 0]);
+    }); 
     //sql.run("")
   });
-  }
+  };
+
 
   if (message.content.indexOf(config.prefix) !== 0) return;
 
@@ -183,20 +291,19 @@ client.on('message', async message => {
     //points
     () => {
       let msg = message;
-      sql.get(`SELECT * FROM scores WHERE userId ="${message.author.id}" AND guildId="${msg.guild.id}"`).then(row => {
+
+      sql.get(`SELECT * FROM guild_user WHERE userId ="${message.author.id}" AND guildId="${msg.guild.id}"`).then(row => {
         if (!row) return message.reply(`Posiadasz 0 punktów`);
-        msg.reply(`Ilość Twoich punktów: ${row.points}`);
-        //console.log(msg.guild.id);
-      });
+        msg.reply(`Ilość Twoich punktów: ${row.score}`);
+        });
     },
     //level
     () => {
       let msg = message;
-      sql.get(`SELECT * FROM scores WHERE userId ="${message.author.id}" AND guildId="${msg.guild.id}"`).then(row => {
+      sql.get(`SELECT * FROM guild_user WHERE userId ="${message.author.id}" AND guildId="${msg.guild.id}"`).then(row => {
         if (!row) return message.reply(`Posiadasz 0 punktów`);
-        msg.reply(`Twój poziom: ${row.level}`);
-        //console.log(msg.guild.id);
-      });
+        msg.reply(`Ilość Twoich punktów: ${row.score}`);
+        });
     },
     //top
     async () => {
@@ -212,51 +319,107 @@ client.on('message', async message => {
       } catch(error) {
         y = 10;
       }
-      //sql.get(`SELECT `)
         for (let i = y-10; i < y; i++) {
-            await sql.get(`SELECT userId, level, points FROM scores WHERE guildId="${msg.guild.id}" ORDER BY points DESC LIMIT 1 OFFSET ${i}`).then(row => {
-              if (!row) return;
-              let n;
-              try {
-                n = msg.guild.members.get(row.userId).displayName;
-              } catch(error) {
-                n = "undefined";
-              };
-              
-              if (n != "undefined") {
-                o += `${i+1}.   ${msg.guild.members.get(row.userId).displayName}\n________ lv: ${row.level} || exp: ${row.points} \n`;
-              } else {o += `${i+1}.   ${row.userId}\n________ lv: ${row.level} || exp: ${row.points} \n`};
+          await sql.get(`SELECT userId, score FROM guild_user WHERE guildId="${msg.guild.id}" ORDER BY score DESC LIMIT 1 OFFSET ${i}`).then(row => {
+            if (!row) return;
+            let n;
+            try {
+              n = msg.guild.members.get(row.userId).displayName;
+            } catch(error) {
+              n = "undefined";
+            };
+            
+            if (n != "undefined") {
+              o += `${i+1}.   ${msg.guild.members.get(row.userId).displayName}\n________ || exp: ${row.score} \n`;
+            } else {o += `${i+1}.   ${row.userId}\n________ || exp: ${row.score} \n`};
 
-              if (i==y-1) {
-                o += "```";
-                msg.channel.send(o);
-              }        
-            });
+            if (i==y-1) {
+              o += "```";
+              msg.channel.send(o);
+            }        
+          });
         }
     },
     //xxx
     () => {
-      message.channel.send("D");
+     // message.channel.send("D");
+     /*
+     let msg = message;
+
+      sql.get(`SELECT * FROM guild WHERE guildId ="${msg.guild.id}"`)
+      .then(async row => {
+        msg.reply(`${row.prefix}`);
+      
+      }).catch(() => {
+
+        sql.run("CREATE TABLE IF NOT EXISTS guild (guildId TEXT, welcome TEXT, goodbye TEXT, prefix TEXT, language TEXT)")
+        .then(() => {
+          sql.run("INSERT INTO guild (guildId, welcome, goodbye, prefix, language) VALUES (?, ?, ?, ?, ?)",
+           [msg.guild.id, "witaj na serwerze!", "do zobaczenia!", ".", "PL"]);
+          
+        })
+        .then(() => {
+          sql.get(`SELECT * FROM guild WHERE guildId ="${msg.guild.id}"`)
+          .then(row => {
+            msg.channel.send(`${row.welcome}`);
+          });
+
+        console.error;
+
+        })
+        
+        
+
+      });
+      */
+    
+    
+
+      
+      let msg1 = message;
+      let z = msg1.createdTimestamp;
+
+      client.setTimeout(() => {
+        let msg2 = message;
+        let y = msg2.createdTimestamp;
+        msg1.channel.send(z);
+
+
+
+      },5000)
+ /*
+    if(message.member.roles.find("name", "👑Anti Admin") || message.member.roles.find("name", "👑Beta / Moderator")){
+        message.channel.send(`hej adminku`);
+    } else message.channel.send(`no elo nieadminku`); */
+/*
+    
+    if(message.member.permissions.has('ADMINISTRATOR')){
+        message.channel.send(`hej adminku`);
+    } else message.channel.send(`no elo nieadminku`);
+    */
+  
+     
       
     }
+
   ];
+
+
 
   let cmd = [];
   for (var i = 0; i < fun.length; i++) {
     cmd.push(new Cmd(name[i], fun[i], description[i]));
+
   }
 
-       if (name[0].includes(command)) {cmd[0].fun();} 
-  else if (name[1].includes(command)) {cmd[1].fun();}
-  else if (name[2].includes(command)) {cmd[2].fun();}
-  else if (name[3].includes(command)) {cmd[3].fun();}
-  else if (name[4].includes(command)) {cmd[4].fun();}
-  else if (name[5].includes(command)) {cmd[5].fun();} 
-  else if (name[6].includes(command)) {cmd[6].fun();}
-  else if (name[7].includes(command)) {cmd[7].fun();}
-  else if (name[8].includes(command)) {cmd[8].fun();}
-  else if (name[9].includes(command)) {cmd[9].fun();}
+  for (var i = 0; i < name.length; i++) {
+    if (name[i].includes(command)) {
+      cmd[i].fun();
+      break;
+    }
+  }
 
 
 });
+
 client.login(config.token);
