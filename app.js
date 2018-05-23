@@ -178,22 +178,24 @@ client.on('message', async message => {
   ["remind", "r", "rem", "remindme", "rmd"],
   ["rand", "rnd", "random"],
   ["points", "p"],
-  ["level", "lv", "l"],
+  ["pmonth", "pm", "pmo"],
   ["top", "t"],
-  ["x"]
+  ["tmonth", "tm"],
+  ["x", "x"]
   ];
 
   const description = [
-  "- komendy",
-  "- czas odpowiedzi serwera",
-  "abc def - anonimowe wyznanie",
-  "- zaproś bohta na własny serwer",
-  "t[s/m/h/d] abc def - wiadomość do przypomnienia",
-  "x - losowa liczba od 1 do x",
-  "- ilość Twoich punktów",
-  "- Twój poziom IQ",
-  "1, 2...- lista osób z największą ilością punktów",
-  "- tajne"
+  "spis komend bohta",
+  "czas odpowiedzi serwera",
+  "*bla bla bla* - anonimowe wyznanie",
+  "zaproś bohta na własny serwer",
+  "*t[s/m/h/d] bla bla* - wiadomość do przypomnienia",
+  "*x* - losowa liczba od 1 do x",
+  "ilość Twoich punktów",
+  "ilość Twoich punktów w danym miesiącu",
+  "*1, 2...*- lista osób z największą ilością punktów",
+  "*1, 2...*- lista osób z najwyższym miesięcznym rankingiem",
+  "tajne"
   ];  
 
   class Cmd {
@@ -207,10 +209,38 @@ client.on('message', async message => {
   let fun = [
     ///help
     () => {
-    let o = "```";
-    for (let i = 0; i < name.length; i++) o += (config.prefix+name[i][0]+" "+description[i]+"\n\n");
-    o += "```";
-    message.channel.send(o);
+    let o = "";
+    let n = ""; 
+    let d = "";
+
+    for (let i = 0; i < name.length; i++) o += (`**${config.prefix+name[i][0]} [${name[i][1]}]** :black_small_square: ${description[i]}\n`);
+    for (let i = 0; i < name.length; i++) n += (`${config.prefix+name[i][0]} [${name[i][1]}]\n`);
+    for (let i = 0; i < name.length; i++) d += (`${description[i]}\n`);
+    o += "";
+    //message.channel.send(o);
+    //
+    message.channel.send({
+    embed: {
+        title: "help",
+        color: 9252433,
+
+        fields: [
+
+      {
+        "name": "komenda",
+        "value": o,
+        "inline": true
+      }
+      ]
+      
+    }
+    
+      
+      
+    
+        });
+
+
     },
     ///ping
     async () => {
@@ -302,43 +332,170 @@ client.on('message', async message => {
       let msg = message;
       sql.get(`SELECT * FROM guild_user WHERE userId ="${message.author.id}" AND guildId="${msg.guild.id}"`).then(row => {
         if (!row) return message.reply(`Posiadasz 0 punktów`);
-        msg.reply(`Ilość Twoich punktów: ${row.score}`);
+        msg.reply(`Ilość punktów w tym miesiącu: ${row.tempScore}`);
         });
     },
     //top
-    async () => {
+    () => {
       let msg = message;
-      let o = "```glsl\n_________________________\n";
       let c = 0;
 
       let msg2 = message.content.split(' ');
-      let y = 1;
-      y = 10;
+      let y = 0;
       try {
-        y = 10 * msg2[1].substring(0, (msg2[1].length));
+        y = msg2[1].substring(0, (msg2[1].length));
       } catch(error) {
-        y = 10;
+        y = 1;
       }
-        for (let i = y-10; i < y; i++) {
-          await sql.get(`SELECT userId, score FROM guild_user WHERE guildId="${msg.guild.id}" ORDER BY score DESC LIMIT 1 OFFSET ${i}`).then(row => {
-            if (!row) return;
-            let n;
-            try {
+
+      sql.all(`SELECT userId, score FROM guild_user WHERE guildId="${msg.guild.id}" ORDER BY score DESC LIMIT 10 OFFSET ${10*(y-1)}`).then(rows => {
+        var user = '';
+        var score = '';
+        var sum = '```glsl\n';
+        var emb = new Array(10);
+        var pos = '';
+        var r = 10*y+1;
+        rows.forEach(function (row) {
+          console.log(row);
+          console.log(r);
+
+
+          let n;
+          try {
               n = msg.guild.members.get(row.userId).displayName;
             } catch(error) {
               n = "undefined";
             };
             
             if (n != "undefined") {
-              o += `${i+1}.   ${msg.guild.members.get(row.userId).displayName}\n________ || exp: ${row.score} \n`;
-            } else {o += `${i+1}.   ${row.userId}\n________ || exp: ${row.score} \n`};
+              //emb[r] = [r+1, msg.guild.members.get(row.userId).displayName, row.score];
+              //emb[rowid].push = [rowid+1, msg.guild.members.get(row.userId).displayName, row.score];
+              sum += `${r-10}. ${row.score} - #${msg.guild.members.get(row.userId).displayName} \n`
+              //user += `${r-10}:black_small_square:${msg.guild.members.get(row.userId).displayName} \n`;
+              //score += `${row.score}:black_small_square:\n`;
+            } else { 
+              //emb[r] = [r+1, row.userId, row.score];
+              sum += `${r-10}. ${row.score} - #${row.userId} \n`
+              //user += `${r-10}:black_small_square:${row.userId} \n`; 
+              //score += `${row.score}:black_small_square:\n`;
+            };
+            //pos += `:black_small_square:${r}\n`;  
+            r++;
+            //console.log(emb[r]);
 
-            if (i==y-1) {
-              o += "```";
-              msg.channel.send(o);
-            }        
-          });
-        }
+            //user += `${msg.guild.members.get(row.userId).displayName}: ${row.score}\n`
+        })
+        sum += '```';
+        console.log(emb);
+        message.channel.send({
+            embed: {
+                title: `Top ${y*10}`,
+                color: 9252433,
+                //description: `kupa`,
+
+                fields: [
+
+              {
+                "name": "pozycja/punkty/użytkownik",
+                "value": sum,
+                "inline": true
+              }
+  
+              ]
+              
+            }
+            
+              
+              
+            
+        });
+      })
+
+
+    },
+    //top month
+    () => {
+      let msg = message;
+      let c = 0;
+
+      let msg2 = message.content.split(' ');
+      let y = 0;
+      try {
+        y = msg2[1].substring(0, (msg2[1].length));
+      } catch(error) {
+        y = 1;
+      }
+
+      sql.all(`SELECT userId, tempScore FROM guild_user WHERE guildId="${msg.guild.id}" ORDER BY tempScore DESC LIMIT 10 OFFSET ${10*(y-1)}`).then(rows => {
+        var user = '';
+        var score = '';
+        var sum = '```glsl\n';
+        var emb = new Array(10);
+        var pos = '';
+        var r = 10*y+1;
+        rows.forEach(function (row) {
+          console.log(row);
+          console.log(r);
+
+
+          let n;
+          try {
+              n = msg.guild.members.get(row.userId).displayName;
+            } catch(error) {
+              n = "undefined";
+            };
+            
+            if (n != "undefined") {
+              //emb[r] = [r+1, msg.guild.members.get(row.userId).displayName, row.score];
+              //emb[rowid].push = [rowid+1, msg.guild.members.get(row.userId).displayName, row.score];
+              sum += `${r-10}. ${row.tempScore} - #${msg.guild.members.get(row.userId).displayName} \n`
+              //user += `${r-10}:black_small_square:${msg.guild.members.get(row.userId).displayName} \n`;
+              //score += `${row.score}:black_small_square:\n`;
+            } else { 
+              //emb[r] = [r+1, row.userId, row.score];
+              sum += `${r-10}. ${row.tempScore} - #${row.userId} \n`
+              //user += `${r-10}:black_small_square:${row.userId} \n`; 
+              //score += `${row.score}:black_small_square:\n`;
+            };
+            //pos += `:black_small_square:${r}\n`;  
+            r++;
+            //console.log(emb[r]);
+
+            //user += `${msg.guild.members.get(row.userId).displayName}: ${row.score}\n`
+        })
+        sum += '```';
+        console.log(emb);
+        message.channel.send({
+            embed: {
+                title: `Miesięczny top ${y*10}`,
+                color: 9252433,
+                //description: `kupa`,
+                "footer": {
+      
+                "text": `rangę Active dostanie ${Math.floor(Math.sqrt(message.guild.memberCount))} osób`
+                },
+
+                fields: [
+
+              {
+                "name": "pozycja/punkty/użytkownik",
+                "value": sum,
+                "inline": true
+              }
+  
+              ],
+
+              //Math.floor(0.1 * Math.sqrt(row.points + 1))
+              
+            }
+            
+              
+              
+            
+        });
+      })
+
+
     },
     //xxx
     () => {
