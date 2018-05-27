@@ -538,11 +538,11 @@ for (let i = 0; i < name.length; i++) o += (`**${config.prefix+name[i][0]} [${na
                   sql.run(`UPDATE user SET repDate=${msg.createdTimestamp} where userId = ${msg.author.id}`)
                   if(y=='-') {
                     sql.run(`UPDATE user SET reputation=${row.reputation - 1} where userId = ${mention.id}`)
-                    msg.channel.send(`-1 punkt reputacji dla <@${mention.id}>, razem: **${row.reputation}**`); 
+                    msg.channel.send(`-1 punkt reputacji dla <@${mention.id}>, razem: **${row.reputation-1}**`); 
 
                   }else {
                     sql.run(`UPDATE user SET reputation=${row.reputation + 1} where userId = ${mention.id}`)
-                    msg.channel.send(`+1 punkt reputacji dla <@${mention.id}> razem: **${row.reputation}**`); 
+                    msg.channel.send(`+1 punkt reputacji dla <@${mention.id}> razem: **${row.reputation+1}**`); 
                   }
                 })
 
