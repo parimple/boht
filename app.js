@@ -519,7 +519,8 @@ for (let i = 0; i < name.length; i++) o += (`**${config.prefix+name[i][0]} [${na
             dif = Math.floor((msg.createdTimestamp-row.repDate)/1000/60);
         }
         catch(err) {
-            dif = 0;
+            dif = x+2;
+
         }
 
          
