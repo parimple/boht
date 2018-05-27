@@ -501,6 +501,7 @@ for (let i = 0; i < name.length; i++) o += (`**${config.prefix+name[i][0]} [${na
         let msg2 = message.content.split(' ');
         let y;
         let z;
+        let dif =0;
         const x = 360;
         try {
           y = msg2[1].substring(0, (msg2[1].length));
@@ -510,11 +511,19 @@ for (let i = 0; i < name.length; i++) o += (`**${config.prefix+name[i][0]} [${na
         console.log(y);
         let mention =  msg.mentions.users.first();
         sql.get(`SELECT * FROM user WHERE userId="${msg.author.id}"`).then(row => {
-         console.log(mention); 
-         let dif = Math.floor((msg.createdTimestamp-row.repDate)/1000/60);
-         console.log(dif);
-         console.log(msg.createdTimestamp);
-         console.log(row.repDate);
+        // console.log(mention);
+
+        try {
+            dif = Math.floor((msg.createdTimestamp-row.repDate)/1000/60);
+        }
+        catch(err) {
+            dif = 0;
+        }
+
+         
+        // console.log(dif);
+         //console.log(msg.createdTimestamp);
+         //console.log(row.repDate);
          if(mention == null) {
           sql.get(`select * from user where userId=${msg.author.id}`).then(row => {
            if(dif<x) {
