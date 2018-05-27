@@ -501,8 +501,10 @@ for (let i = 0; i < name.length; i++) o += (`**${config.prefix+name[i][0]} [${na
         let msg2 = message.content.split(' ');
         let y;
         let z;
-        let dif =0;
+        
+
         const x = 360;
+        let dif = x+1;;
         try {
           y = msg2[1].substring(0, (msg2[1].length));
         } catch(error) {
