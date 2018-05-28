@@ -147,89 +147,76 @@ client.on('message', async message => {
   //console.log(args);
 
   //new db
-  if (args.length > 2) {
-    sql.get(`SELECT * FROM guild_user WHERE userId ="${message.author.id}" AND guildId="${message.guild.id}"`).then(async row => {
+  sql.get(`SELECT * FROM guild_user 
+    JOIN user ON guild_user.userId = user.userId 
+    WHERE guild_user.userId ="${message.author.id}" AND guild_user.guildId="${message.guild.id}"`).then(async row => {
       if (!row) {
+        sql.run(`INSERT INTO user (userId, reputation, repDate, creditsDate, userInfo, credits) VALUES (?, ?, ?, ?, ?, ?)`, 
+          [message.author.id, 0, 0, 0, "", 0]);
         sql.run(`INSERT INTO guild_user (guildId, userId, score, tempScore, userGuildInfo) VALUES (?, ?, ?, ?, ?)`, 
           [message.guild.id, message.author.id, 1, 1, ""]);
+
       //await Math.floor(0.1 * Math.sqrt(row.points + 1));
     } 
-    else {
+    else if (args.length > 2) {
       sql.run(`UPDATE guild_user SET score = ${row.score + 1}, tempScore = ${row.tempScore + 1}\
        WHERE userId = ${message.author.id} AND guildId = ${message.guild.id}`);
     }
-  }).catch(() => {
-    console.error;
-    
-    sql.run(`CREATE TABLE IF NOT EXISTS guild_user (
-    score INTEGER, 
-    tempScore INTEGER,  
-    userGuildInfo TEXT,  
-    userId TEXT,  
-    guildId TEXT,  
-    PRIMARY KEY (userId, guildId),  
-    FOREIGN KEY(guildId)  REFERENCES guild(guildId), 
-    FOREIGN KEY(userId)  REFERENCES user(userId)) without rowid`
-    ).then(() => {
-      sql.run(`INSERT INTO guild_user (score, tempScore, userGuildInfo, userId, guildId) VALUES (?, ?, ?, ?, ?)`,
-         [0, 0, "", member.user.id, member.guild.id]);//wciecie
-    }); 
-    //sql.run("")
-  });
-};
+
+  })
 
 
-if (message.content.indexOf(config.prefix) !== 0) return;
+    if (message.content.indexOf(config.prefix) !== 0) return;
 
-const name = [
-["help", "h", "hlp"],
-["ping", "pi"],
-["say", "s"],
-["invite", "i", "inv", "in"],
-["remind", "re", "rem", "remindme", "rmd"],
-["rand", "rnd", "random"],
-["points", "p"],
-["pmonth", "pm", "pmo"],
-["top", "t"],
-["tmonth", "tm"],
-["rep", "r"],
-["setRole", "sr"],
-["x", "x"]
-];
+    const name = [
+    ["help", "h", "hlp"],
+    ["ping", "pi"],
+    ["say", "s"],
+    ["invite", "i", "inv", "in"],
+    ["remind", "re", "rem", "remindme", "rmd"],
+    ["rand", "rnd", "random"],
+    ["points", "p"],
+    ["pmonth", "pm", "pmo"],
+    ["top", "t"],
+    ["tmonth", "tm"],
+    ["rep", "r"],
+    ["setRole", "sr"],
+    ["x", "x"]
+    ];
 
-const description = [
-"spis komend bohta",
-"czas odpowiedzi serwera",
-"*bla bla bla* - anonimowe wyznanie",
-"zaproś bohta na własny serwer",
-"*t[s/m/h/d] bla bla* - wiadomość do przypomnienia",
-"*x* - losowa liczba od 1 do x",
-"ilość Twoich punktów",
-"ilość Twoich punktów w danym miesiącu",
-"*1, 2...*- lista osób z największą ilością punktów",
-"*1, 2...*- lista osób z najwyższym miesięcznym rankingiem",
-"*+[-] @user*- przydzielenie reputacji",
-"*autorole rola*- ustawienie autoroli",
-"tajne"
-];  
+    const description = [
+    "spis komend bohta",
+    "czas odpowiedzi serwera",
+    "*bla bla bla* - anonimowe wyznanie",
+    "zaproś bohta na własny serwer",
+    "*t[s/m/h/d] bla bla* - wiadomość do przypomnienia",
+    "*x* - losowa liczba od 1 do x",
+    "ilość Twoich punktów",
+    "ilość Twoich punktów w danym miesiącu",
+    "*1, 2...*- lista osób z największą ilością punktów",
+    "*1, 2...*- lista osób z najwyższym miesięcznym rankingiem",
+    "*+[-] @user*- przydzielenie reputacji",
+    "*autorole rola*- ustawienie autoroli",
+    "tajne"
+    ];  
 
-class Cmd {
-  constructor(name, fun, description) {
-    this.name = name;
-    this.fun = fun;
-    this.description = description;
-  }
-}
+    class Cmd {
+      constructor(name, fun, description) {
+        this.name = name;
+        this.fun = fun;
+        this.description = description;
+      }
+    }
 
-let fun = [
+    let fun = [
     ///help
     () => {
       let o = "";
       let n = ""; 
       let d = "";
 
-for (let i = 0; i < name.length; i++) o += (`**${config.prefix+name[i][0]} [${name[i][1]}]** \
-  :black_small_square: ${description[i]}\n`);
+      for (let i = 0; i < name.length; i++) o += (`**${config.prefix+name[i][0]} [${name[i][1]}]** \
+        :black_small_square: ${description[i]}\n`);
         for (let i = 0; i < name.length; i++) n += (`${config.prefix+name[i][0]} [${name[i][1]}]\n`);
           for (let i = 0; i < name.length; i++) d += (`${description[i]}\n`);
             o += "";
@@ -375,45 +362,31 @@ for (let i = 0; i < name.length; i++) o += (`**${config.prefix+name[i][0]} [${na
           };
 
           if (n != "undefined") {
-              //emb[r] = [r+1, msg.guild.members.get(row.userId).displayName, row.score];
-              //emb[rowid].push = [rowid+1, msg.guild.members.get(row.userId).displayName, row.score];
-              sum += `${r-10}. ${row.score} - #${msg.guild.members.get(row.userId).displayName} \n`
-              //user += `${r-10}:black_small_square:${msg.guild.members.get(row.userId).displayName} \n`;
-              //score += `${row.score}:black_small_square:\n`;
-            } else { 
-              //emb[r] = [r+1, row.userId, row.score];
-              sum += `${r-10}. ${row.score} - #${row.userId} \n`
-              //user += `${r-10}:black_small_square:${row.userId} \n`; 
-              //score += `${row.score}:black_small_square:\n`;
-            };
-            //pos += `:black_small_square:${r}\n`;  
-            r++;
-            //console.log(emb[r]);
-
-            //user += `${msg.guild.members.get(row.userId).displayName}: ${row.score}\n`
-          })
+            sum += `${r-10}. ${row.score} - #${msg.guild.members.get(row.userId).displayName} \n`
+          } else { 
+            sum += `${r-10}. ${row.score} - #${row.userId} \n`
+          };
+          r++;
+        })
         sum += '```';
         console.log(emb);
         message.channel.send({
           embed: {
             title: `Top ${y*10}`,
             color: 9252433,
-                //description: `kupa`,
+            fields: [
 
-                fields: [
+            {
+              "name": "pozycja/punkty/użytkownik",
+              "value": sum,
+              "inline": true
+            }
 
-                {
-                  "name": "pozycja/punkty/użytkownik",
-                  "value": sum,
-                  "inline": true
-                }
+            ]
 
-                ]
-
-              }
-            });
+          }
+        });
       })
-
 
     },
     //top month
@@ -448,22 +421,11 @@ for (let i = 0; i < name.length; i++) o += (`**${config.prefix+name[i][0]} [${na
             };
             
             if (n != "undefined") {
-              //emb[r] = [r+1, msg.guild.members.get(row.userId).displayName, row.score];
-              //emb[rowid].push = [rowid+1, msg.guild.members.get(row.userId).displayName, row.score];
               sum += `${r-10}. ${row.tempScore} - #${msg.guild.members.get(row.userId).displayName} \n`
-              //user += `${r-10}:black_small_square:${msg.guild.members.get(row.userId).displayName} \n`;
-              //score += `${row.score}:black_small_square:\n`;
             } else { 
-              //emb[r] = [r+1, row.userId, row.score];
               sum += `${r-10}. ${row.tempScore} - #${row.userId} \n`
-              //user += `${r-10}:black_small_square:${row.userId} \n`; 
-              //score += `${row.score}:black_small_square:\n`;
             };
-            //pos += `:black_small_square:${r}\n`;  
             r++;
-            //console.log(emb[r]);
-
-            //user += `${msg.guild.members.get(row.userId).displayName}: ${row.score}\n`
           })
           sum += '```';
           console.log(emb);
@@ -501,8 +463,6 @@ for (let i = 0; i < name.length; i++) o += (`**${config.prefix+name[i][0]} [${na
         let msg2 = message.content.split(' ');
         let y;
         let z;
-        
-
         const x = 360;
         let dif = x+1;;
         try {
@@ -514,61 +474,88 @@ for (let i = 0; i < name.length; i++) o += (`**${config.prefix+name[i][0]} [${na
         let mention =  msg.mentions.users.first();
         sql.get(`SELECT * FROM user WHERE userId="${msg.author.id}"`).then(row => {
         // console.log(mention);
-
         try {
-            dif = Math.floor((msg.createdTimestamp-row.repDate)/1000/60);
+          dif = Math.floor((msg.createdTimestamp-row.repDate)/1000/60);
         }
         catch(err) {
-            dif = x+2;
+          dif = x+1;
+        }
+        console.log(dif);
 
+        if (dif<x) {
+          msg.reply(`Ilość Twoich punktów: **${row.reputation}**, możesz przyznać reputację za ${x-dif}m`);
+        }
+        else {
+          if (mention == null) {
+            msg.reply(`Ilość Twoich punktów: **${row.reputation}**, możesz już przyznać reputację`);
+          } else if (mention.id == msg.author.id) {
+            msg.reply(`Ilość Twoich punktów: **${row.reputation}**, możesz przyznać reputację komuś **fajnemu**`);
+          } else {
+            sql.get(`select * from user WHERE userId=${mention.id}`).then(row => {
+              console.log(row);
+              if (!row) {
+                sql.run(`INSERT INTO user (userId, reputation, repDate, creditsDate, userInfo, credits) VALUES (?, ?, ?, ?, ?, ?)`,
+                  [mention.id, 0, 0, 0, "", 0]);
+              } 
+              sql.run(`UPDATE user SET repDate=${msg.createdTimestamp} where userId = ${msg.author.id}`)
+              if(y=='-') {
+                sql.run(`UPDATE user SET reputation=${row.reputation - 1} where userId = ${mention.id}`)
+                msg.channel.send(`-1 punkt reputacji dla <@${mention.id}>, razem: **${row.reputation-1}**`); 
+              }else {
+                sql.run(`UPDATE user SET reputation=${row.reputation + 1} where userId = ${mention.id}`)
+                msg.channel.send(`+1 punkt reputacji dla <@${mention.id}> razem: **${row.reputation+1}**`); 
+              }
+            })
+
+          }
         }
 
-         
+
         // console.log(dif);
          //console.log(msg.createdTimestamp);
          //console.log(row.repDate);
-         if(mention == null) {
-          sql.get(`select * from user where userId=${msg.author.id}`).then(row => {
-           if(dif<x) {
-            msg.reply(`Ilość Twoich punktów: **${row.reputation}**, możesz przyznać reputację za ${x-dif}m`);
-          }else
-          msg.reply(`Ilość Twoich punktów: **${row.reputation}**, możesz już przyznać reputację`)
-        })
-        }
-        else {
-          if(mention.id == msg.author.id) {
-            sql.get(`select * from user where userId=${mention.id}`).then(row => {
-              if(dif<x) {msg.reply(`Ilość Twoich punktów: **${row.reputation}**, możesz przyznać reputację za ${x-dif}m`)}
-                else
-                  msg.reply(`Ilość Twoich punktów: **${row.reputation}**, możesz przyznać reputację komuś **fajnemu**`)
-              })
-          }
-          else {
-            if(dif<x) {msg.reply(`Możesz przyznać reputację za ${x-dif}m`)}
-              else {
-                sql.get(`select * from user WHERE userId=${mention.id}`).then(row => {
-                  sql.run(`UPDATE user SET repDate=${msg.createdTimestamp} where userId = ${msg.author.id}`)
-                  if(y=='-') {
-                    sql.run(`UPDATE user SET reputation=${row.reputation - 1} where userId = ${mention.id}`)
-                    msg.channel.send(`-1 punkt reputacji dla <@${mention.id}>, razem: **${row.reputation-1}**`); 
 
-                  }else {
-                    sql.run(`UPDATE user SET reputation=${row.reputation + 1} where userId = ${mention.id}`)
-                    msg.channel.send(`+1 punkt reputacji dla <@${mention.id}> razem: **${row.reputation+1}**`); 
-                  }
-                })
-
-              }
-
-
-          }
-        }
-      });
+       });
       },
+      //setrole
       () => {
         let msg = message;
 
-      },
+        let msg1 = message;
+        let msg2 = message;
+        let a;
+        let b;
+        msg = message.content.split(' ');
+      //console.log(`Message recieved from ${msg2.author.username}`);
+      roleId = msg[1];
+      msg.shift();
+      msg.shift();
+      let roleName = msg.join();
+
+      for (let i of msg) {
+        roleName = roleName.replace(',', ' ').slice(0);
+        msg[i];
+      }
+      //let role = message.guild.roles.find("name", roleName);
+      //console.log(role);
+     console.log(roleName); 
+      //let role = message.guild.roles.get("421057284777705482");
+      //let role = message.member.roles.find("name", roleName);
+      let role = message.guild.roles.find("name", 'roleName').id;
+
+      console.log(role);
+      msg2.reply(role);
+/*
+      sql.run(`CREATE TABLE IF NOT EXISTS channel (
+        channelId TEXT, 
+        channel TEXT, 
+        active INTEGER, 
+        guildId TEXT, 
+        PRIMARY KEY (channelId, guildId), 
+        FOREIGN KEY(guildId) REFERENCES guild(guildId)) without rowid`
+        );
+*/
+    },
     //xxx
     () => {
      // message.channel.send("D");
@@ -648,5 +635,3 @@ for (let i = 0; i < name.length; i++) o += (`**${config.prefix+name[i][0]} [${na
 });
 
 client.login(config.token);
-
-
