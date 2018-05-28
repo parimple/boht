@@ -147,68 +147,75 @@ client.on('message', async message => {
   //console.log(args);
 
   //new db
-  sql.get(`SELECT * FROM guild_user 
-    JOIN user ON guild_user.userId = user.userId 
-    WHERE guild_user.userId ="${message.author.id}" AND guild_user.guildId="${message.guild.id}"`).then(async row => {
+  sql.get(`SELECT * FROM user WHERE userId =${message.author.id}`).then(row => {
+    if (!row) {
+      sql.run(`INSERT INTO user (userId, reputation, repDate, creditsDate, userInfo, credits) VALUES (?, ?, ?, ?, ?, ?)`, 
+        [message.author.id, 0, 0, 0, "", 0]);
+      sql.run(`INSERT INTO guild_user (guildId, userId, score, tempScore, userGuildInfo) VALUES (?, ?, ?, ?, ?)`, 
+        [message.guild.id, message.author.id, 1, 1, ""]);
+    }
+    sql.get(`SELECT * FROM guild_user where userId ="${message.author.id}" AND guild_user.guildId="${message.guild.id}"`)
+    .then(row => {
       if (!row) {
-        sql.run(`INSERT INTO user (userId, reputation, repDate, creditsDate, userInfo, credits) VALUES (?, ?, ?, ?, ?, ?)`, 
-          [message.author.id, 0, 0, 0, "", 0]);
         sql.run(`INSERT INTO guild_user (guildId, userId, score, tempScore, userGuildInfo) VALUES (?, ?, ?, ?, ?)`, 
           [message.guild.id, message.author.id, 1, 1, ""]);
+         //await Math.floor(0.1 * Math.sqrt(row.points + 1));
 
-      //await Math.floor(0.1 * Math.sqrt(row.points + 1));
-    } 
-    else if (args.length > 2) {
-      sql.run(`UPDATE guild_user SET score = ${row.score + 1}, tempScore = ${row.tempScore + 1}\
-       WHERE userId = ${message.author.id} AND guildId = ${message.guild.id}`);
-    }
+       }
+       if (args.length > 2) {
+        sql.run(`UPDATE guild_user SET score = ${row.score + 1}, tempScore = ${row.tempScore + 1}
+          WHERE userId = ${message.author.id} AND guildId = ${message.guild.id}`);
+      }
+
+    })
+
 
   })
 
 
-    if (message.content.indexOf(config.prefix) !== 0) return;
+  if (message.content.indexOf(config.prefix) !== 0) return;
 
-    const name = [
-    ["help", "h", "hlp"],
-    ["ping", "pi"],
-    ["say", "s"],
-    ["invite", "i", "inv", "in"],
-    ["remind", "re", "rem", "remindme", "rmd"],
-    ["rand", "rnd", "random"],
-    ["points", "p"],
-    ["pmonth", "pm", "pmo"],
-    ["top", "t"],
-    ["tmonth", "tm"],
-    ["rep", "r"],
-    ["setRole", "sr"],
-    ["x", "x"]
-    ];
+  const name = [
+  ["help", "h", "hlp"],
+  ["ping", "pi"],
+  ["say", "s"],
+  ["invite", "i", "inv", "in"],
+  ["remind", "re", "rem", "remindme", "rmd"],
+  ["rand", "rnd", "random"],
+  ["points", "p"],
+  ["pmonth", "pm", "pmo"],
+  ["top", "t"],
+  ["tmonth", "tm"],
+  ["rep", "r"],
+  ["setRole", "sr"],
+  ["x", "x"]
+  ];
 
-    const description = [
-    "spis komend bohta",
-    "czas odpowiedzi serwera",
-    "*bla bla bla* - anonimowe wyznanie",
-    "zaproś bohta na własny serwer",
-    "*t[s/m/h/d] bla bla* - wiadomość do przypomnienia",
-    "*x* - losowa liczba od 1 do x",
-    "ilość Twoich punktów",
-    "ilość Twoich punktów w danym miesiącu",
-    "*1, 2...*- lista osób z największą ilością punktów",
-    "*1, 2...*- lista osób z najwyższym miesięcznym rankingiem",
-    "*+[-] @user*- przydzielenie reputacji",
-    "*autorole rola*- ustawienie autoroli",
-    "tajne"
-    ];  
+  const description = [
+  "spis komend bohta",
+  "czas odpowiedzi serwera",
+  "*bla bla bla* - anonimowe wyznanie",
+  "zaproś bohta na własny serwer",
+  "*t[s/m/h/d] bla bla* - wiadomość do przypomnienia",
+  "*x* - losowa liczba od 1 do x",
+  "ilość Twoich punktów",
+  "ilość Twoich punktów w danym miesiącu",
+  "*1, 2...*- lista osób z największą ilością punktów",
+  "*1, 2...*- lista osób z najwyższym miesięcznym rankingiem",
+  "*+[-] @user*- przydzielenie reputacji",
+  "*autorole rola*- ustawienie autoroli",
+  "tajne"
+  ];  
 
-    class Cmd {
-      constructor(name, fun, description) {
-        this.name = name;
-        this.fun = fun;
-        this.description = description;
-      }
+  class Cmd {
+    constructor(name, fun, description) {
+      this.name = name;
+      this.fun = fun;
+      this.description = description;
     }
+  }
 
-    let fun = [
+  let fun = [
     ///help
     () => {
       let o = "";
@@ -538,13 +545,22 @@ client.on('message', async message => {
       }
       //let role = message.guild.roles.find("name", roleName);
       //console.log(role);
-     console.log(roleName); 
+      console.log(roleName); 
       //let role = message.guild.roles.get("421057284777705482");
       //let role = message.member.roles.find("name", roleName);
-      let role = message.guild.roles.find("name", 'roleName').id;
+      let role;
+      try {
+        role = message.guild.roles.find("name", roleName).id;
+      } catch(err) {
+        msg2.channel.send('nie ma takiej roli');
 
-      console.log(role);
-      msg2.reply(role);
+      }
+      
+      //let role = message.guild.roles.find("name", "Boty").id;
+      //console.log(role);
+
+      //console.log(role);
+      //msg2.reply(role);
 /*
       sql.run(`CREATE TABLE IF NOT EXISTS channel (
         channelId TEXT, 
@@ -554,8 +570,8 @@ client.on('message', async message => {
         PRIMARY KEY (channelId, guildId), 
         FOREIGN KEY(guildId) REFERENCES guild(guildId)) without rowid`
         );
-*/
-    },
+        */
+      },
     //xxx
     () => {
      // message.channel.send("D");
