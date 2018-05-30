@@ -133,11 +133,46 @@ client.on("guildMemberAdd", (member) => {
 });
 
 client.on('message', async message => {
-  if (message.channel.isPrivate) {
+  const dontShow = ['110373943822540800', '449301348333256704'];
+  const translate = [
+    ['325628628618575872', '451308189871243294'], //mfo2
+    ['421016932964237312', '451297687174905867'] //antisocial
+  ]
+  //console.log(translate[0]);
+  //console.log(translate[1]);
+
+  if (!dontShow.includes(message.guild.id)) {
+    if (message.channel.isPrivate) {
     console.log(`(Private) ${message.author.username}: ${message.content}`);
   } else {
-    console.log(`(${message.guild.name} / ${message.channel.name}) ${message.author.username}: ${message.content}`);
+    console.log(`(${message.guild.id} - ${message.guild.name} / ${message.channel.name})
+    ${message.author.username}: \n${message.content}`);
+    let flag = -1;
+    for (var i = 0; i < translate.length; i++) {
+
+      if (message.guild.id == translate[i][0]) {
+        client.guilds.get('449301348333256704').channels.get(translate[i][1])
+    .send("<@"+message.author.id+">" + "```" + message.content +"```");
+    flag = i;
+    break;
+
+       // console.log('no znalazło');
+      } 
+     // console.log('no chyba nie');
+    } if (flag < 0) {
+        client.guilds.get('449301348333256704').channels.get('451300147813679105')
+    .send(`*<@${message.author.id}> (${message.guild.id} - ${message.guild.name} / ${message.channel.name})*\n${message.content}`)
+
+      
+    }
+    //console.log(config.)
+    //client.guilds.get('449301348333256704').channels.get('451300147813679105')
+    //.send(`*(${message.guild.id} - ${message.guild.name} / ${message.channel.name}) <@${message.author.id}>*\n${message.content}`)
+
   }
+
+  }
+
 
   if (message.channel.type === "dm") return;
   if (message.author.bot) return;
@@ -180,7 +215,7 @@ client.on('message', async message => {
   ["ping", "pi"],
   ["say", "s"],
   ["invite", "i", "inv", "in"],
-  ["remind", "re", "rem", "remindme", "rmd"],
+  ["remind", "rem", "re", "remindme", "rmd"],
   ["rand", "rnd", "random"],
   ["points", "p"],
   ["pmonth", "pm", "pmo"],
@@ -293,8 +328,10 @@ client.on('message', async message => {
         } 
 
       } else {
-        msg2.reply(`Podaj jednostkę czasu! s/m/h/d np 5m`);
-      }
+          returntime = timemeasure * 1000 * 60;
+          timemeasure = `m`;
+          msg1.channel.send(`Dobrze! Przypomnę za ${returntime/1000/60}${timemeasure}!`);
+        }
       client.setTimeout(() => {
         msg.shift();
         msg.shift();
@@ -325,7 +362,7 @@ client.on('message', async message => {
 
       sql.get(`SELECT * FROM guild_user WHERE userId ="${message.author.id}" AND guildId="${msg.guild.id}"`).then(row => {
         if (!row) return message.reply(`Posiadasz 0 punktów`);
-        msg.reply(`Ilość Twoich punktów: ${row.score}`);
+        msg.reply(`Stan Twojej reputacji: ${row.score}`);
       });
     },
     //month points
@@ -490,13 +527,13 @@ client.on('message', async message => {
         console.log(dif);
 
         if (dif<x) {
-          msg.reply(`Ilość Twoich punktów: **${row.reputation}**, możesz przyznać reputację za ${x-dif}m`);
+          msg.reply(`Stan Twojej reputacji: **${row.reputation}**, możesz ją przydzielić za ${x-dif}m`);
         }
         else {
           if (mention == null) {
-            msg.reply(`Ilość Twoich punktów: **${row.reputation}**, możesz już przyznać reputację`);
+            msg.reply(`Stan Twojej reputacji: **${row.reputation}**, możesz już ją przydzielić`);
           } else if (mention.id == msg.author.id) {
-            msg.reply(`Ilość Twoich punktów: **${row.reputation}**, możesz przyznać reputację komuś **fajnemu**`);
+            msg.reply(`Stan Twojej reputacji: **${row.reputation}**, możesz ją przydzielić komuś **fajnemu**`);
           } else {
             sql.get(`select * from user WHERE userId=${mention.id}`).then(row => {
               console.log(row);
@@ -553,8 +590,11 @@ client.on('message', async message => {
         role = message.guild.roles.find("name", roleName).id;
       } catch(err) {
         msg2.channel.send('nie ma takiej roli');
+        //return 0;
 
       }
+      //a.toUpperCase();
+      console.log(a);
       
       //let role = message.guild.roles.find("name", "Boty").id;
       //console.log(role);
