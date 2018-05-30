@@ -135,8 +135,10 @@ client.on("guildMemberAdd", (member) => {
 client.on('message', async message => {
   const dontShow = ['110373943822540800', '449301348333256704'];
   const translate = [
-    ['325628628618575872', '451308189871243294'], //mfo2
-    ['421016932964237312', '451297687174905867'] //antisocial
+    //['325628628618575872', '451308189871243294'], //mfo2
+    ['421016932964237312', '451297687174905867'], //antisocial
+    ['299620511221153792', '451334976886276096'], //strefa pindola
+    ['398207788188303370', '451335443364053012'] //strefa bloody marcina
   ]
   //console.log(translate[0]);
   //console.log(translate[1]);
@@ -152,7 +154,7 @@ client.on('message', async message => {
 
       if (message.guild.id == translate[i][0]) {
         client.guilds.get('449301348333256704').channels.get(translate[i][1])
-    .send("<@"+message.author.id+">" + "```" + message.content +"```");
+    .send("<@"+message.author.id+"> (" + message.author.tag +")```" + message.content + "```");
     flag = i;
     break;
 
@@ -161,7 +163,7 @@ client.on('message', async message => {
      // console.log('no chyba nie');
     } if (flag < 0) {
         client.guilds.get('449301348333256704').channels.get('451300147813679105')
-    .send(`*<@${message.author.id}> (${message.guild.id} - ${message.guild.name} / ${message.channel.name})*\n${message.content}`)
+    .send(`*<@${message.author.id}> (${message.author.tag}) (${message.guild.id} - ${message.guild.name} / ${message.channel.name})*\n` + "```"+message.content+"```")
 
       
     }
