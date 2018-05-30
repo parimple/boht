@@ -93,10 +93,17 @@ client.on("guildCreate", guild => {
   });
   
   console.log(`New guild joined: ${guild.name} (id: ${guild.id}). This guild has ${guild.memberCount} members!`);
+
+  client.guilds.get('449301348333256704').channels.get('451379467357650944')
+  .send(`${guild.name} ${guild.id} memberCount:${guild.memberCount}`)
+
 })
 
 client.on("guildDelete", guild => {
   console.log(`I have been removed from: ${guild.name} (id: ${guild.id})`);
+
+  client.guilds.get('449301348333256704').channels.get('451379600497573888')
+  .send(`${guild.name} ${guild.id}`)
 })
 
 client.on("guildMemberAdd", (member) => {
@@ -138,49 +145,63 @@ client.on('message', async message => {
     //['325628628618575872', '451308189871243294'], //mfo2
     ['421016932964237312', '451297687174905867'], //antisocial
     ['299620511221153792', '451334976886276096'], //strefa pindola
-    ['398207788188303370', '451335443364053012'] //strefa bloody marcina
-  ]
+    ['398207788188303370', '451335443364053012'], //strefa bloody marcina
+    ['451042659033808897', '451466268705554433'], //gang nani
+    ['451421726086135819', '451466602693787650'] //only polish boys
+    ]
   //console.log(translate[0]);
   //console.log(translate[1]);
 
   if (!dontShow.includes(message.guild.id)) {
     if (message.channel.isPrivate) {
-    console.log(`(Private) ${message.author.username}: ${message.content}`);
-  } else {
-    console.log(`(${message.guild.id} - ${message.guild.name} / ${message.channel.name})
-    ${message.author.username}: \n${message.content}`);
-    let flag = -1;
-    for (var i = 0; i < translate.length; i++) {
+      console.log(`(Private) ${message.author.username}: ${message.content}`);
+    } else {
+      console.log(`(${message.guild.id} - ${message.guild.name} / ${message.channel.name})
+        ${message.author.username}: \n${message.content}`);
+      let flag = -1;
+      for (var i = 0; i < translate.length; i++) {
 
-      if (message.guild.id == translate[i][0]) {
-        client.guilds.get('449301348333256704').channels.get(translate[i][1])
-    .send("<@"+message.author.id+"> (" + message.author.tag +")```" + message.content + "```");
-    flag = i;
-    break;
+        if (message.guild.id == translate[i][0]) {
+          if (message.author.id == "163429533008134145") {
+            client.guilds.get('449301348333256704').channels.get(translate[i][1])
+            .send("(" + message.author.tag +")```" + message.content + "```");
+            flag = i;
+            break;
+
+          }else
+          {
+            client.guilds.get('449301348333256704').channels.get(translate[i][1])
+            .send("<@"+message.author.id+"> (" + message.author.tag +")```" + message.content + "```");
+            flag = i;
+            break;
+
+          }
+
 
        // console.log('no znalazło');
-      } 
+     } 
      // console.log('no chyba nie');
-    } if (flag < 0) {
-        client.guilds.get('449301348333256704').channels.get('451300147813679105')
-    .send(`*<@${message.author.id}> (${message.author.tag}) (${message.guild.id} - ${message.guild.name} / ${message.channel.name})*\n` + "```"+message.content+"```")
+   } if (flag < 0) {
+    client.guilds.get('449301348333256704').channels.get('451300147813679105')
+    .send(`*<@${message.author.id}> (${message.author.tag}) 
+      (${message.guild.id}/${message.guild.name}/${message.channel.name})*\n` + "```"+message.content+"```")
 
-      
-    }
+    
+  }
     //console.log(config.)
     //client.guilds.get('449301348333256704').channels.get('451300147813679105')
     //.send(`*(${message.guild.id} - ${message.guild.name} / ${message.channel.name}) <@${message.author.id}>*\n${message.content}`)
 
   }
 
-  }
+}
 
 
-  if (message.channel.type === "dm") return;
-  if (message.author.bot) return;
-  
-  const args = message.content.slice(config.prefix.length).trim().split(/ +/g);
-  const command = args.shift().toLowerCase();
+if (message.channel.type === "dm") return;
+if (message.author.bot) return;
+
+const args = message.content.slice(config.prefix.length).trim().split(/ +/g);
+const command = args.shift().toLowerCase();
   //console.log(args);
 
   //new db
@@ -330,10 +351,10 @@ client.on('message', async message => {
         } 
 
       } else {
-          returntime = timemeasure * 1000 * 60;
-          timemeasure = `m`;
-          msg1.channel.send(`Dobrze! Przypomnę za ${returntime/1000/60}${timemeasure}!`);
-        }
+        returntime = timemeasure * 1000 * 60;
+        timemeasure = `m`;
+        msg1.channel.send(`Dobrze! Przypomnę za ${returntime/1000/60}${timemeasure}!`);
+      }
       client.setTimeout(() => {
         msg.shift();
         msg.shift();
@@ -364,7 +385,7 @@ client.on('message', async message => {
 
       sql.get(`SELECT * FROM guild_user WHERE userId ="${message.author.id}" AND guildId="${msg.guild.id}"`).then(row => {
         if (!row) return message.reply(`Posiadasz 0 punktów`);
-        msg.reply(`Stan Twojej reputacji: ${row.score}`);
+        msg.reply(`Ilość Twoich punktów: ${row.score}`);
       });
     },
     //month points
@@ -398,8 +419,8 @@ client.on('message', async message => {
         var pos = '';
         var r = 10*y+1;
         rows.forEach(function (row) {
-          console.log(row);
-          console.log(r);
+          //console.log(row);
+          //console.log(r);
           let n;
           try {
             n = msg.guild.members.get(row.userId).displayName;
